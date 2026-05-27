@@ -73,6 +73,24 @@ git push -u origin main
 
 The public demo does not require authentication and does not connect to Supabase, OpenAI, brokerages, paid market data, or real news APIs.
 
+## Enable Live AI Research
+
+The stock detail page includes an optional live AI research panel. It works only after you add an OpenAI API key on Vercel. Without the key, the app still runs and shows the local demo fallback.
+
+1. Open your Vercel project.
+2. Go to `Settings` -> `Environment Variables`.
+3. Add:
+
+```bash
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-4o-mini
+```
+
+4. Redeploy the project from Vercel.
+5. Open `/stock/CSL` and click `Run live AI`.
+
+Live AI research uses OpenAI from a server-side API route. The API key is never exposed in the browser. The app still does not connect to brokerages, execute trades, give buy/sell/hold recommendations, or provide target prices.
+
 ## Main Routes
 
 - `/login` - login/register with language preference

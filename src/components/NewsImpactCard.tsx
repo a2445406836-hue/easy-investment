@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Newspaper } from "lucide-react";
+import { CalendarDays, ExternalLink, Newspaper } from "lucide-react";
 import { ImpactBadge } from "@/components/ImpactBadge";
 import { ImportanceBadge } from "@/components/ImportanceBadge";
 import { dual } from "@/lib/i18n";
@@ -10,7 +10,11 @@ import type { AIAnalysis, NewsItem } from "@/lib/types";
 const fields: { key: keyof AIAnalysis; label: string; zh: string }[] = [
   { key: "short_term_impact", label: "Short-term impact", zh: "短期影响" },
   { key: "long_term_impact", label: "Long-term impact", zh: "长期影响" },
-  { key: "affected_valuation_drivers", label: "Affected valuation drivers", zh: "受影响估值驱动因素" },
+  {
+    key: "affected_valuation_drivers",
+    label: "Affected valuation drivers",
+    zh: "受影响估值驱动因素",
+  },
   { key: "dcf_valuation_implication", label: "DCF / valuation implication", zh: "DCF / 估值含义" },
   { key: "portfolio_relevance", label: "Portfolio relevance", zh: "组合相关性" },
   { key: "key_risks", label: "Key risks", zh: "主要风险" },
@@ -49,6 +53,17 @@ export function NewsImpactCard({
                 new Date(newsItem.published_at),
               )}
             </span>
+            {newsItem.url && newsItem.url !== "#" && (
+              <a
+                href={newsItem.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 font-medium text-emerald-800 hover:text-emerald-900"
+              >
+                {dual(language, "Source", "来源")}
+                <ExternalLink size={14} aria-hidden />
+              </a>
+            )}
           </div>
         </div>
 

@@ -15,6 +15,7 @@ import { StockHeader } from "@/components/StockHeader";
 import { UserPositionCard } from "@/components/UserPositionCard";
 import { NewsImpactCard } from "@/components/NewsImpactCard";
 import { ThesisTracker } from "@/components/ThesisTracker";
+import { LiveResearchPanel } from "@/components/LiveResearchPanel";
 import type { DemoStock } from "@/lib/types";
 
 export function StockDetailClient({ ticker }: { ticker: string }) {
@@ -49,17 +50,18 @@ export function StockDetailClient({ ticker }: { ticker: string }) {
       <StockHeader stock={stock} />
       <UserPositionCard stock={stock} portfolioItem={portfolioItem} />
       <ThesisTracker thesis={portfolioItem?.investment_thesis} thesisEffect={firstThesisEffect} />
+      <LiveResearchPanel stock={stock} portfolioItem={portfolioItem} language={language} />
 
       <section>
         <div className="mb-4">
           <h2 className="text-xl font-semibold text-stone-950">
-            {dual(language, "Latest news impact cards", "最新新闻影响卡片")}
+            {dual(language, "Demo news impact cards", "演示新闻影响卡片")}
           </h2>
           <p className="mt-1 text-sm text-stone-600">
             {dual(
               language,
-              "Each card follows the rulebook-based AI output template.",
-              "每张卡片都遵循基于规则库的 AI 输出模板。",
+              "These cards use seeded demo data. Use Live AI research above for current public information.",
+              "这些卡片使用种子演示数据。如需最新公开信息，请使用上方实时 AI 研究。",
             )}
           </p>
         </div>
