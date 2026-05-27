@@ -12,6 +12,7 @@ import type {
 
 export const runtime = "nodejs";
 
+const CACHE_TTL_MS = 30 * 60 * 1000;
 const impacts: TheoreticalImpact[] = ["Positive", "Negative", "Mixed", "Neutral"];
 const importances: Importance[] = ["High", "Medium", "Low"];
 const thesisEffects: ThesisEffect[] = [
@@ -53,6 +54,24 @@ interface OpenAIParsedResponse {
   generated_at?: string;
   items?: OpenAILiveItem[];
 }
+
+interface CachedLiveAnalysis {
+  expiresAt: number;
+  response: {
+    configured: boolean;
+    generatedAt: string;
+    cached: boolean;
+    items: { newsItem: NewsItem; analysis: AIAnalysis }[];
+  };
+}
+
+const globalLiveCache = globalThis as typeof globalThis & {
+  easyInvestmentLiveCache?: Map<string, CachedLiveAnalysis>;
+};
+
+const liveCache =
+  globalLiveCache.easyInvestmentLiveCache ??
+  (globalLiveCache.easyInvestmentLiveCache = new Map<string, CachedLiveAnalysis>());
 
 function asEnum<T extends string>(value: string | undefined, allowed: T[], fallback: T): T {
   return allowed.includes(value as T) ? (value as T) : fallback;
@@ -148,10 +167,18 @@ Return ONLY valid JSON, no markdown, in this exact shape:
       "thesis_effect": "Supports thesis | Weakens thesis | Neutral to thesis | Unclear"
     }
   ]
-}
-
 Return 1 to 3 high-signal items only.
 `;
+}
+
+function getCacheKey(request: LiveAnalysisRequest) {
+  return [
+    request.ticker.toUpperCase(),
+    request.market,
+    request.companyName.toLowerCase(),
+    request.languagePreference,
+    request.userPortfolio?.investment_thesis ?? "no-thesis",
+  ].join("|");
 }
 
 export async function POST(request: Request) {
@@ -170,6 +197,15 @@ export async function POST(request: Request) {
 
   const body = (await request.json()) as LiveAnalysisRequest;
   const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+  const cacheKey = getCacheKey(body);
+  const cached = liveCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return NextResponse.json({
+      ...cached.response,
+      cached: true,
+    });
+  }
 
   try {
     const openAIResponse = await fetch("https://api.openai.com/v1/responses", {
@@ -239,11 +275,19 @@ export async function POST(request: Request) {
       return { newsItem, analysis };
     });
 
-    return NextResponse.json({
+    const response = {
       configured: true,
       generatedAt: parsed.generated_at || now,
+      cached: false,
       items,
+    };
+
+    liveCache.set(cacheKey, {
+      expiresAt: Date.now() + CACHE_TTL_MS,
+      response,
     });
+
+    return NextResponse.json(response);
   } catch (error) {
     return NextResponse.json(
       {
